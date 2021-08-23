@@ -24,7 +24,7 @@ class Body:
     '''
     def __init__(self, m, position, momentum):
         '''
-        Creates a particle using the arguments
+        Creates a particle using the attributes
         .mass : scalar
         .position : NumPy array  with the coordinates [x,y,z]
         .momentum : NumPy array  with the components [px,py,pz]
@@ -161,7 +161,7 @@ def create_video(image_folder='images/', video_name='my_video.mp4'):
 
 if __name__=="__main__":
     '''
-    Example of 2-Body system
+    Example of 2-Body system: Sun-Earth
     '''
     # Bodies initial data
     sunM = 1.           # Solar masses
