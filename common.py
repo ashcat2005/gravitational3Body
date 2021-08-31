@@ -2,6 +2,7 @@ from copy import deepcopy
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
+plt.style.use('dark_background')
 from matplotlib import rcParams
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -161,9 +162,10 @@ def plot_bodies(bodies, i, time, lim_inf, lim_sup, image_folder='images/'):
     ax.xaxis.pane.set_edgecolor('dimgray')
     ax.yaxis.pane.set_edgecolor('dimgray')
     ax.zaxis.pane.set_edgecolor('dimgray')
+    colors_l=['yellow', 'orange', 'skyblue']
     colors=['gold','darkorange','cyan']
     for j in range(3):
-        ax.plot(bodies[:,j,0], bodies[:,j,1],bodies[:,j,2])#,'-', color=colors[j])
+        ax.plot(bodies[:,j,0], bodies[:,j,1],bodies[:,j,2], color=colors_l[j])#,'-', color=colors[j])
         ax.scatter(bodies[-1,j,0], bodies[-1,j,1], bodies[-1,j,2], marker='o', color=colors[j])
     ax.set_title(' Time : {:.3f} years'.format(time), color='dimgray')
     plt.gcf().savefig(image_folder+'image_{0:06}.png'.format(i))
