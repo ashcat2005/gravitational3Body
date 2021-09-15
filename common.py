@@ -1,5 +1,4 @@
-from copy import deepcopy
-import numpy as np
+from numpy import pi, array, zeros, sum, cross, amin, amax, linspace
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -7,15 +6,15 @@ from matplotlib import rcParams
 from mpl_toolkits.mplot3d import Axes3D
 
 # Gravitational constant in units of [au^3 M_sun^-1 yr-2]
-G = 4*np.pi**2
+G = 4*pi**2
 
 #################################################---EXAMPLES---#################################################
 #Some examples of celestial bodies = [x, y, z, vx, vy, vz, mass, orbital period]
-Sun = np.array([0.,0.,0.,0.,0.,0.,1.,0.])
-Jupiter = np.array([3.733076999471E+00, 3.052424824299E+00, 1.217426663570E+00, -1.85782081, 2.00651219, 0.90532114, 9.54791e-04, 11.8618])
-Halley = np.array([0.33126099, -0.45385512, 0.16628889,-9.01382671, -7.04649889, -1.27585467,1.106378E-16,75.32])
-Geographos = np.array([-0.21765384, -0.77581474, -0.18955119, 7.66669988, -2.20533078, 0.22284989, 1.0E-17,1.39])
-a_2021PH27 = np.array([0.09174773, 0.09731134, 0.01034353, -14.54945423, 12.47980066, 11.64527326, 1.0e-5,0.31, .7886707956777496]) #Real approximate mass 1.0e-17
+Sun = array([0.,0.,0.,0.,0.,0.,1.,0.])
+Jupiter = array([3.733076999471E+00, 3.052424824299E+00, 1.217426663570E+00, -1.85782081, 2.00651219, 0.90532114, 9.54791e-04, 11.8618])
+Halley = array([0.33126099, -0.45385512, 0.16628889,-9.01382671, -7.04649889, -1.27585467,1.106378E-16,75.32])
+Geographos = array([-0.21765384, -0.77581474, -0.18955119, 7.66669988, -2.20533078, 0.22284989, 1.0E-17,1.39])
+a_2021PH27 = array([0.09174773, 0.09731134, 0.01034353, -14.54945423, 12.47980066, 11.64527326, 1.0e-5,0.31, .7886707956777496]) #Real approximate mass 1.0e-17
 
 def Acceleration(q0, mass):
     '''
@@ -38,7 +37,7 @@ def Acceleration(q0, mass):
         acceleration
         a[i] = [ax_i, ay_i, az_i] for i=0,1,2
     '''
-    a = np.zeros([3, 3])
+    a = zeros([3, 3])
     Deltaxyz = q0[0] - q0[1], q0[0] - q0[2], q0[1] - q0[2]    
     r = LA.norm(Deltaxyz[0]), LA.norm(Deltaxyz[1]), LA.norm(Deltaxyz[2]) # Distance between particles
     a[0,:] = -G * Deltaxyz[0] * mass[1] / r[0]**3 - G * Deltaxyz[1] * mass[2]/r[1]**3
@@ -68,12 +67,12 @@ def Constants(q, mass):
         system
     --------------------------------------------------
     '''
-    speed2 = np.array(np.sum(q[:,3:]**2, axis=1))
+    speed2 = array(sum(q[:,3:]**2, axis=1))
     r = LA.norm(q[0,:3] - q[1,:3]), LA.norm(q[0,:3] - q[2,:3]), LA.norm(q[1,:3] - q[2,:3])
-    U = np.array([mass[0]*mass[1]/r[0], mass[0]*mass[2]/r[1], mass[1]*mass[2]/r [2]])
-    E = np.sum(0.5*speed2*mass-2*G*U) # Total energy
-    L = np.cross(q[0,:3],(mass[0]*q[0,3:]))+ np.cross(q[1,:3],(mass[1]*q[1,3:]))\
-        + np.cross(q[2,:3],(mass[2]*q[2,3:]))#Total angular momentum vector
+    U = array([mass[0]*mass[1]/r[0], mass[0]*mass[2]/r[1], mass[1]*mass[2]/r [2]])
+    E = sum(0.5*speed2*mass-2*G*U) # Total energy
+    L = cross(q[0,:3],(mass[0]*q[0,3:]))+ cross(q[1,:3],(mass[1]*q[1,3:]))\
+        + cross(q[2,:3],(mass[2]*q[2,3:]))#Total angular momentum vector
     
     return E, LA.norm(L)
 
@@ -101,7 +100,7 @@ def PEFRL(ODE, q0, mass, n, t):
         solution since t0 to tf
     '''
     # Arrays to store the solution
-    q = np.zeros([n, 3, 6])  
+    q = zeros([n, 3, 6])
     q[0] = q0
     
     #stepsize for the iteration
@@ -136,7 +135,7 @@ def create_images(evolution, dt, center, img_step, image_folder='images/', video
     '''
     
     # Limits for the axes in the plot
-    boundary = 1.1*max(abs(np.amin(evolution[:,:,:3])),abs(np.amax(evolution[:,:,:3])))
+    boundary = 1.1*max(abs(amin(evolution[:,:,:3])),abs(amax(evolution[:,:,:3])))
     lim_inf = [center[0]-boundary, center[1]-boundary, center[2]-boundary]
     lim_sup = [center[0]+boundary, center[1]+boundary, center[2]+boundary]
     
@@ -198,23 +197,23 @@ if __name__=="__main__":
     
     
     # Creation of the time grid (in years)
-    t = np.array([0.,max(Body_1[-1],Body_2[-1], Body_3[-1])])
+    t = array([0.,max(Body_1[-1],Body_2[-1], Body_3[-1])])
     
     # Number of steps in the grid
     n = 10000
     
     # Arrays to store time information
-    t1 = np.linspace(t[0], t[1], n) 
+    t1 = linspace(t[0], t[1], n)
     dt = (t[1]-t[0])/n
     print(f'dt={dt} and tf={t1[1]}')
     # Mass
     m1 = Body_1[6]
     m2 = Body_2[6]
     m3 = Body_3[6]
-    mass = np.array([m1, m2, m3])
+    mass = array([m1, m2, m3])
     
     # Initial Conditions
-    q = np.zeros([n,3,6]) #  Motion information FR
+    q = zeros([n,3,6]) #  Motion information FR
     q[0, 0] = Body_1[:6] # initial x, y, vx, vy to particle 1
     q[0, 1] = Body_2[:6] # initial x, y, vx, vy to particle 2
     q[0, 2] = Body_3[:6] # initial x, y, vx, vy to particle 3
@@ -230,7 +229,7 @@ if __name__=="__main__":
     # Name of the generated video
     video_name = 'my_video.mp4'
     # Center of the image
-    center = np.array([0., 0., 0.])
+    center = array([0., 0., 0.])
 
-    create_images(q, dt, center, img_step, image_folder, video_name)
-    create_video(image_folder, video_name)
+    #create_images(q, dt, center, img_step, image_folder, video_name)
+    #create_video(image_folder, video_name)
