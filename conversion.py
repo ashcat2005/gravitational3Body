@@ -2,8 +2,7 @@
 # and cartesian velocities.
 
 from numpy.linalg import norm
-from numpy import pi, sqrt, array, dot, cross
-from numpy import sin, cos, arcsin, arccos
+from numpy import sin, cos, arcsin, arccos, pi, sqrt, array, dot, cross
 from scipy.optimize import newton
 
 def op_to_coords(mu, a, ecc, i, omega, Omega, t_0, t):
@@ -128,7 +127,7 @@ if __name__ == "__main__":
     '''
     Example: test comet
     '''
-    # Working with the system of units au, yr, solar masses
+    # Working with the system of units au, yr, and solar masses
     G = 4*pi**2 # Newtonian Gravitational Constant
     sunM = 1.   # Mass of the Sun
     mu = G*sunM
