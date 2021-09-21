@@ -1,30 +1,21 @@
-#Simulation of two bodies in gravitational interaction.
+# Simulation of two bodies interacting gravitationally.
 
-import numpy as np
+from numpy import pi, loadtxt, float64, zeros, array, sum, cross, str_, linspace
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
+plt.style.use('dark_background')
 from conversion import *
 from Plots import *
 
 # Gravitational constant in units of [au^3 M_sun^-1 yr-2]
-G = 4*np.pi**2
+G = 4*pi**2
 
-#Bodies data as [x[au], y[au], z[au], vx[au/yr], vy[au/yr], vz[au/yr], mass[solar masses], orbital period[yr]]
-Sun = np.array([0.,0.,0.,0.,0.,0.,1.,0.])
-Mercury = np.array([-2.503321047836E-01, 1.873217481656E-01, 1.260230112145E-01,-8.90756486, -6.75780661, -2.68592451, 1.66014e-07, 0.24094])
-Venus = np.array([1.747780055994E-02, -6.624210296743E-01, -2.991203277122E-01, 7.3360674, 0.30554196, -0.32681492, 2.08106e-06, 0.61603, ])
-Earth_Moon = np.array([-9.091916173950E-01, 3.592925969244E-01, 1.557729610506E-01,-2.5880511,-5.31659521,-2.30501358, 3.00273e-6, 1.])
-Mars = np.array([1.203018828754E+00,7.270712989688E-01, 3.009561427569E-01, -2.60215337,4.25985033,2.02420998, 3.23237e-07, 1.8809])
-Jupiter = np.array([3.733076999471E+00, 3.052424824299E+00, 1.217426663570E+00, -1.85782081, 2.00651219, 0.90532114, 9.54791e-04, 11.8618])
-Saturn = np.array([6.164433062913E+00, 6.366775402981E+00, 2.364531109847E+00, -1.61686412, 1.23965502, 0.58156154, 2.85885e-04, 29.4571])
-Uranus = np.array([1.457964661868E+01, -1.236891078519E+01, -5.623617280033E+00, 0.96698158, 0.90852515, 0.3842352, 4.36624e-05, 84.0182])
-Neptune = np.array([1.695491139909E+01, -2.288713988623E+01, -9.789921035251E+00, 0.9381808, 0.61427667, 0.22811637, 5.15138e-05, 164.7946])
-Pluto = np.array([-9.707098450131E+00,-2.804098175319E+01,-5.823808919246E+00, 1.108187, -0.4059004, -0.46087813, 6.58086e-09, 248.])
-Halley = np.array([0.33126099, -0.45385512, 0.16628889,-9.01382671, -7.04649889, -1.27585467,1.106378E-16,75.32])
-Geographos = np.array([-0.21765384, -0.77581474, -0.18955119, 7.66669988, -2.20533078, 0.22284989, 1.0E-17,1.39])
-Hidalgo = np.array([0.56084979, 1.5044718, 1.09763743,-5.37114217, 0.42400368, 2.16328483, 1.0E-17,13.72])
-a_2021PH27 = np.array([0.09174773, 0.09731134, 0.01034353, -14.54945423, 12.47980066, 11.64527326, 1.0E-17,0.31])
-
+# Examples of celestial bodies.
+# Data has the format:
+# [name, a[au], ecc, i[rad], omega[rad], Omega[rad], Epoch[yr], time[yr], mass[M_Sun], period [yr]]
+Data =  loadtxt("Data.asc",
+        dtype={'names': ('Name', 'Semi-major axis', 'Eccentricity', 'Inclination', 'Peri', 'Node', 'Epoch', 'Time', 'Mass', 'Period'),
+               'formats': ("|S15", float64, float64, float64, float64, float64, float64, float64, float64, float64)})
 
 def Acceleration(q0, mass):
     '''
@@ -36,7 +27,7 @@ def Acceleration(q0, mass):
     Arguments:
     q0: Numpy array with position data:
         q0[0] = Body 1
-        q0[1] = Body 2 where
+        q0[1] = Body 2, where
         q0[i] = [x_i, y_i, z_i] for i=[0,1]
     mass: masses of the bodies
         mass = [m1, m2]
@@ -47,7 +38,7 @@ def Acceleration(q0, mass):
         a[i] = [ax_i, ay_i, az_i] for i=[0,1]
     ----------------------------------------------------
     '''
-    a = np.zeros([2, 3])
+    a = zeros([2, 3])
     Deltaxyz = q0[0] - q0[1]
     r = LA.norm(Deltaxyz)  # Distance between particles
     a[0, :] = -G * Deltaxyz * mass[1]/r**3  # Acceleration Body_1
@@ -76,58 +67,18 @@ def Constants(q, mass):
         system.
     ----------------------------------------------------
     '''
-    speed2 = np.array(np.sum(q[:,3:]**2, axis=1))
-    r= LA.norm(q[0,:3] - q[1,:3])
-    U = -G*mass[1]*mass[0]/r
-    E = np.sum(0.5*speed2*mass) + 2*U # Total energy
-    L = np.cross(q[0,:3],(mass[0]*q[0,3:]))+ np.cross(q[1,:3],(mass[1]*q[1,3:])) #Total angular momentum vector
+    speed2 = array(sum(q[:,3:]**2, axis=1))
+    U = -G*mass[1]*mass[0]/LA.norm(q[0,:3] - q[1,:3])
+    E = sum(0.5*speed2*mass) + 2*U # Total energy
+    L = cross(q[0,:3],(mass[0]*q[0,3:]))+ cross(q[1,:3],(mass[1]*q[1,3:])) # Total angular momentum vector
     
     return E, LA.norm(L)
 
-def Runge_Lenz(q, mass):
-    '''
-    ----------------------------------------------------
-    Runge_Lenz(q, mass)
-    Calculates the magnitude of the Runge-Lenz vector 
-    of 2 particles interacting gravitationally.
-    ----------------------------------------------------
-    Arguments:
-    q : Numpy array with the position and velocity of 
-        the particles with the format
-        q = [[x1, y1, z1, vx1, vy1, vz1],
-             [x2, y2, z2, vx2, vy2, vz2]]
-    mass : NumPy array with the masses of the particles.
-        mass = [m1, m2]
-    ----------------------------------------------------
-    Returns:
-    A = Magnitude of the Runge-Lenz vector.
-    ----------------------------------------------------
-    '''
-    L1 = np.cross(q[0,:3],(mass[0]*q[0,3:])) # r1 x p1
-    L2 = np.cross(q[1,:3],(mass[1]*q[1,3:])) # r2 x p2
-    r1 =  LA.norm(q[0,:3])
-    r2 =  LA.norm(q[1,:3])
-    
-    if (r1!=0 and r2!=0):
-        A1 = np.cross(mass[0]*q[0,:3], L1) - mass[0]*G*q[0,:3]/r1
-        A2 = np.cross(mass[1]*q[1,:3], L2) - mass[1]*G*q[1,:3]/r2
-    elif r1==0 and r2!= 0:
-        A1 = np.cross(mass[0]*q[0,:3], L1) 
-        A2 = np.cross(mass[1]*q[1,:3], L2) - mass[1]*G*q[1,:3]/r2
-    elif r1!=0 and r2==0:
-        A1 = np.cross(mass[0]*q[0,:3], L1) - mass[0]*G*q[0,:3]/r1
-        A2 = np.cross(mass[1]*q[1,:3], L2)
-    else:
-        A1 = np.cross(mass[0]*q[0,:3], L1)
-        A2 = np.cross(mass[1]*q[1,:3], L2)
-    
-    return LA.norm(A1+A2)
-
-def PEFRL(ODE, q0, mass, n, t):
+def PEFRL(ODE, q0, mass, n, dt):
     '''
     ----------------------------------------------------
     PEFRL(ODE, q0, mass, n, t)
-    Position Extended Forest-Ruth Like (PEFRL) method 
+    Position Extended Forest-Ruth Like (PEFRL) method
     for time evolution.
     ----------------------------------------------------
     Arguments:
@@ -139,110 +90,112 @@ def PEFRL(ODE, q0, mass, n, t):
     mass: masses of the particles
         mass = [m1, m2]
     n:  Number of steps in the grid
-    t:  array (t0,tf) whit the initial and final time.
+    dt:  Stepsize for the iteration
     ----------------------------------------------------
     Returns:
     q = NumPy array with system's evolution since t0 to tf
     ----------------------------------------------------
     '''
     # Arrays to store the solution
-    q = np.zeros([n, 2, 6])  
+    q = zeros([n, 2, 6])  
     q[0] = q0
-    
-    #stepsize for the iteration
-    h = (t[1]-t[0])/n
 
-    #Parameter
+    # Parameters
     xi = 0.1786178958448091E+00
     gamma = -0.2123418310626054E+00
     chi = -0.6626458266981849E-01 
     
     # Main Loop
     for i in range(n-1):
-        x_1 = q[i,:,:3] + xi*h*q[i,:,3:]
+        x_1 = q[i,:,:3] + xi*dt*q[i,:,3:]
         F = ODE(x_1, mass)
-        v_1 = q[i,:,3:] + 0.5*(1.-2*gamma)*h*F
-        x_2 = x_1 + chi*h*v_1
+        v_1 = q[i,:,3:] + 0.5*(1.-2*gamma)*dt*F
+        x_2 = x_1 + chi*dt*v_1
         F = ODE(x_2, mass)
-        v_2 = v_1 + gamma*h*F
-        x_3 = x_2 + (1.-2*(chi+xi))*h*v_2
+        v_2 = v_1 + gamma*dt*F
+        x_3 = x_2 + (1.-2*(chi+xi))*dt*v_2
         F = ODE(x_3, mass)
-        v_3 = v_2 + gamma*h*F
-        x_4 = x_3 + chi*h*v_3
+        v_3 = v_2 + gamma*dt*F
+        x_4 = x_3 + chi*dt*v_3
         F = ODE(x_4, mass)
-        q[i+1,:,3:] = v_3 + 0.5*(1.-2*gamma)*h*F
-        q[i+1,:,:3] = x_4 + xi*h*q[i+1,:,3:]
+        q[i+1,:,3:] = v_3 + 0.5*(1.-2*gamma)*dt*F
+        q[i+1,:,:3] = x_4 + xi*dt*q[i+1,:,3:]
 
     return q
 
-# Bodies initial data
-Body_1 = Sun # Body 1
-Body_2 = Jupiter # Body 2
-names = ['Sun', 'Jupiter']
+# Data of bodies
+Body_2 = Data[0] # Body 2
+names = ['Sun', str_(Body_2['Name'])[2:-1]] # Here, we dalete a extra characters
+                                               # of the 2nd body's name
 
-# Time's interval [yr]
-t = np.array([0.,max(Body_1[-1],Body_2[-1])])
+# Number of time-iterations.
+n = 10000
 
-# Number of time-iterations executed by the program.
-n = 10000 # Time steps
+# Array to store time information [yr]
+t = linspace(0., 1e1*Body_2['Period'], n)
 
-print(f'\ntf={t[1]} [yr] and dt={(t[1]-t[0])/n} [yr]\n')
+dt = (t[-1]-t[0])/n #Stepsize for the iteration
 
-# Array to store time information
-t1 = np.linspace(t[0], t[1], n) 
+print(f"\ntf={t[-1]} yr and dt={dt} yr\n") 
 
-# Masses in Solar masses
-m1 = Body_1[6]
-m2 = Body_2[6]
-masses = np.array([m1, m2])
+# Masses [M_sun]
+masses = array([1., Body_2['Mass']])
 
 # Initial Conditions
-Evolution = np.zeros([n,2,6]) 
-Evolution[0, 0] = Body_1[:6] # initial x, y, z, vx, vy to Body 1
-Evolution[0, 1] = Body_2[:6] # initial x, y, z, vx, vy to Body 2
+# Transformation the initial conditios from orbital parameters to cartesian coordinates
+ini_pos_2, ini_vel_2 = op_to_coords( G*masses[0], Body_2['Semi-major axis'], Body_2['Eccentricity'],
+                        Body_2['Inclination'], Body_2['Peri'], Body_2['Node'], Body_2['Epoch'], Body_2['Time'])
+
+# Array to store the system's evolution
+Evolution = zeros([n,2,6])
+# initial x, y, z, vx, vy, vz of Body 1
+Evolution[0, 0] = array([0., 0., 0., 0., 0., 0.]) # It's in the center and at rest
+# initial x, y, z, vx, vy, vz of Body 2
+Evolution[0, 1] = ini_pos_2[0], ini_pos_2[1], ini_pos_2[2],\
+                  ini_vel_2[0], ini_vel_2[1], ini_vel_2[2]
 
 # Solution to the problem using PEFRL method
 print('Evolution in process...')
-Evolution = PEFRL(Acceleration, Evolution[0], masses, n, t)
+Evolution = PEFRL(Acceleration, Evolution[0], masses, n, dt)
 print('The process has finished.')
 
-#Plot Orbit
+# Plot Orbit
 Plot_orbit(Evolution, names)
 
 # Array of Energy and Angular momentum of the system
-Energy = np.zeros(n) #Energy 
-AngMom = np.zeros(n) #Angular momentum
+Energy = zeros(n) # Energy 
+AngMom = zeros(n) # Angular momentum
 print('Calculating Energy and Angular Momentum...')
 for i in range(n):
     Energy[i], AngMom[i] = Constants(Evolution[i], masses)
 print('Energy and Angular momentum calculated.')
 
-#Plot Energy
-fig, ax = plt.subplots( figsize=(10,7))
+# Energy and Angular momentum of the system
 
-ax.plot(t1, Energy, color='crimson')
-ax.set_title('Energy for system: '+ names[0] +'-'+names[1])
-ax.set_xlabel(r'$t~[yr]$')
-ax.set_ylabel(r'$E$')
+# Plots
+plt.rcParams['axes.grid'] = True
+plt.rcParams['axes.formatter.limits']= -3, 3
+fig, axs = plt.subplots(1, 2, figsize=(16,8))
+
+axs[0].plot(t,Energy, color='cyan')
+axs[0].set_title('Energy')
+axs[0].set_ylabel('$M_\odot au^2 yr ^ {-2}$')
+axs[0].set_xlabel('$t$ [yr]')
+
+axs[1].plot(t,AngMom, color='cyan')
+axs[1].set_title('Angular momentum')
+axs[1].set_ylabel('$M_\odot au^2 yr ^ {-1}$')
+axs[1].set_xlabel('$t$ [yr]')
+
+plt.setp(axs, xlim=[0,t[-1]])
 plt.show()
 
-#Plot Angular momentum
-fig, ax = plt.subplots( figsize=(10,7))
-
-ax.plot(t1, AngMom, color='crimson')
-ax.set_title('Angular Momentum for system: '+ names[0] +'-'+names[1])
-ax.ticklabel_format(useMathText=True)
-ax.set_xlabel(r'$t~[yr]$')
-ax.set_ylabel(r'$L$')
-plt.show()
-
-#Orbital Elements
-orbital_elements = np.zeros([n,5]) #  Evolution of orbital elements
-mu = G*m1
+# Orbital Elements
+Orbital_elements = zeros([n,5]) # Evolution of orbital elements
 print('Transforming to orbital elements...')
 for i in range(n):
-    orbital_elements[i]=coords_to_op(mu,Evolution[i,1,:3]-Evolution[i,0,:3],Evolution[i,1,3:]-Evolution[i,0,3:])
+    Orbital_elements[i]=coords_to_op(G*masses[0],Evolution[i,1,:3]-Evolution[i,0,:3],Evolution[i,1,3:]-Evolution[i,0,3:])
 print('Ok!')
 
-#Plot Orbital elements
-Plot_OrbElem(t1,orbital_elements)
+# Plot Orbital elements
+Plot_OrbElem(t,Orbital_elements, names[1])
