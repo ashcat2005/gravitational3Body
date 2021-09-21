@@ -2,7 +2,7 @@ def Plot_orbit(Evolution, Names, Central_Body=None, Outer_Body=None):
     '''
     ----------------------------------------------------------------
     Plot_orbit(Evolution):
-    Draw the orbit of a system of bodies.
+    Draw the orbit of a system of bodies in the Central_Body frame.
     ----------------------------------------------------------------
     Arguments:
     Evolution: Numpy array with the cartesian position of each body 
@@ -71,7 +71,7 @@ def Plot_OrbElem(t, Orbital_elements, Name='test particle', Color='cyan'):
     ----------------------------------------------------------------
     Arguments:
     t:  Time interval.
-    Evolution: Numpy array with the orbital elements of each body
+    Orbital_elements: Numpy array with the orbital elements of each body
         over a time interval, following the next format:
         Orbital_elements=[a,e,i,omega, Omega]
     Name: Body's name.
@@ -82,39 +82,43 @@ def Plot_OrbElem(t, Orbital_elements, Name='test particle', Color='cyan'):
     plt.style.use('dark_background')
     import matplotlib.ticker as mtick
 
+    plt.rcParams['axes.grid'] = True
+    plt.rcParams['axes.formatter.limits']= -3, 3
     fig, axs = plt.subplots(2, 3, figsize=(16,8))
 
-    fig.suptitle('Orbital Elements of ' + Name,fontsize=20)
+    fig.suptitle('COEs of ' + Name,fontsize=20)
 
     #Plot Semi-major axis
     axs[0, 0].plot(t, Orbital_elements[:,0], color=Color)
     axs[0, 0].set_title('$a$')
-    axs[0, 0].grid(True)
+    axs[0, 0].set_ylabel('[au]')
+    axs[0, 0].set_xlabel('$t$ [yr]')
 
     #Plot Eccentricity
-    axs[1, 0].plot(t, Orbital_elements[:,1], color=Color)
-    axs[1, 0].set_title('$e$')
-    axs[1, 0].grid(True)
+    axs[0, 1].plot(t, Orbital_elements[:,1], color=Color)
+    axs[0, 1].set_title('$e$')
+    axs[0, 1].set_xlabel('$t$ [yr]')
 
     #Plot Inclination
-    axs[0, 1].plot(t, Orbital_elements[:,2], color=Color)
-    axs[0, 1].set_title('$\iota$')
-    axs[0, 1].grid(True)
-    axs[0, 1].yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+    axs[0, 2].plot(t, Orbital_elements[:,2], color=Color)
+    axs[0, 2].set_title('$\iota$')
+    axs[0, 2].set_ylabel('[rads]')
+    axs[0, 2].set_xlabel('$t$ [yr]')
 
     #Plot argument of periapse
-    axs[1, 1].plot(t, Orbital_elements[:,3], color=Color)
-    axs[1, 1].set_title('$\omega$')
-    axs[1, 1].grid(True)
+    axs[1, 0].plot(t, Orbital_elements[:,3], color=Color)
+    axs[1, 0].set_title('$\omega$')
+    axs[1, 0].set_ylabel('[rads]')
+    axs[1, 0].set_xlabel('$t$ [yr]')
 
     #Plot Longitude of ascendind node
-    axs[0, 2].plot(t, Orbital_elements[:, 4], color=Color)
-    axs[0, 2].set_title('$\Omega$')
-    axs[0, 2].grid(True)
-    axs[0, 2].yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+    axs[1, 1].plot(t, Orbital_elements[:, 4], color=Color)
+    axs[1, 1].set_title('$\Omega$')
+    axs[1, 1].set_ylabel('[rads]')
+    axs[1, 1].set_xlabel('$t$ [yr]')
 
-    plt.subplots_adjust(wspace=0.4,
-                        hspace=0.4)
+    plt.subplots_adjust(wspace=0.4,hspace=0.4)
+    plt.setp(axs, xlim=[t[0],t[-1]])
                         
     axs[1, 0].set_position([0.24,0.125,0.228,0.343])
     axs[1, 1].set_position([0.55,0.125,0.228,0.343])
