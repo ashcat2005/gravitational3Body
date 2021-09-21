@@ -12,9 +12,7 @@ G = 4*pi**2
 #Some examples of celestial bodies = [x, y, z, vx, vy, vz, mass, orbital period]
 Sun = array([0.,0.,0.,0.,0.,0.,1.,0.])
 Jupiter = array([3.733076999471E+00, 3.052424824299E+00, 1.217426663570E+00, -1.85782081, 2.00651219, 0.90532114, 9.54791e-04, 11.8618])
-Halley = array([0.33126099, -0.45385512, 0.16628889,-9.01382671, -7.04649889, -1.27585467,1.106378E-16,75.32])
-Geographos = array([-0.21765384, -0.77581474, -0.18955119, 7.66669988, -2.20533078, 0.22284989, 1.0E-17,1.39])
-a_2021PH27 = array([0.09174773, 0.09731134, 0.01034353, -14.54945423, 12.47980066, 11.64527326, 1.0e-5,0.31, .7886707956777496]) #Real approximate mass 1.0e-17
+Earth_Moon = array([-9.091916173950E-01, 3.592925969244E-01, 1.557729610506E-01,-2.5880511,-5.31659521,-2.30501358, 3.00273e-6, 1.])
 
 def Acceleration(q0, mass):
     '''
@@ -76,10 +74,10 @@ def Constants(q, mass):
     
     return E, LA.norm(L)
 
-def PEFRL(ODE, q0, mass, n, t):
+def PEFRL(ODE, q0, mass, n, dt):
     '''
     --------------------------------------------------
-    PEFRL(ODE, q0, mass, n, t)
+    PEFRL(ODE, q0, mass, n, dt)
     --------------------------------------------------
     Position Extended Forest-Ruth Like (PEFRL) method 
     for time evolution.
@@ -92,19 +90,15 @@ def PEFRL(ODE, q0, mass, n, t):
     mass: masses of the particles
         mass = [m1, m2]
     n:  Number of steps in the grid
-    t: array (t0,tf) whit the initial and 
-       final time.
+    dt: Stepsize for the iteration.
     --------------------------------------------------
     Returns:
     q = NumPy array with the components of the 
         solution since t0 to tf
     '''
     # Arrays to store the solution
-    q = zeros([n, 3, 6])
+    q = zeros([n, 3, 6])  
     q[0] = q0
-    
-    #stepsize for the iteration
-    h = (t[1]-t[0])/n
     
     #Parameter
     xi = 0.1786178958448091E+00
@@ -113,19 +107,19 @@ def PEFRL(ODE, q0, mass, n, t):
     
     # Main Loop
     for i in range(n-1):
-        x_1 = q[i,:,:3] + xi*h*q[i,:,3:]
+        x_1 = q[i,:,:3] + xi*dt*q[i,:,3:]
         F = ODE(x_1, mass)
-        v_1 = q[i,:,3:] + 0.5*(1.-2*gamma)*h*F
-        x_2 = x_1 + chi*h*v_1
+        v_1 = q[i,:,3:] + 0.5*(1.-2*gamma)*dt*F
+        x_2 = x_1 + chi*dt*v_1
         F = ODE(x_2, mass)
-        v_2 = v_1 + gamma*h*F
-        x_3 = x_2 + (1.-2*(chi+xi))*h*v_2
+        v_2 = v_1 + gamma*dt*F
+        x_3 = x_2 + (1.-2*(chi+xi))*dt*v_2
         F = ODE(x_3, mass)
-        v_3 = v_2 + gamma*h*F
-        x_4 = x_3 + chi*h*v_3
+        v_3 = v_2 + gamma*dt*F
+        x_4 = x_3 + chi*dt*v_3
         F = ODE(x_4, mass)
-        q[i+1,:,3:] = v_3 + 0.5*(1.-2*gamma)*h*F
-        q[i+1,:,:3] = x_4 + xi*h*q[i+1,:,3:]
+        q[i+1,:,3:] = v_3 + 0.5*(1.-2*gamma)*dt*F
+        q[i+1,:,:3] = x_4 + xi*dt*q[i+1,:,3:]
 
     return q     
             
@@ -133,16 +127,20 @@ def create_images(evolution, dt, center, img_step, image_folder='images/', video
     '''
     This function evolves the system in time using the PEFRL algorithm
     '''
-    
+    from tqdm import tqdm
+
     # Limits for the axes in the plot
-    boundary = 1.1*max(abs(amin(evolution[:,:,:3])),abs(amax(evolution[:,:,:3])))
+    boundary = 1.1*max(abs(amin(evolution[:,:,:3]-center)),abs(amax(evolution[:,:,:3]-center)))
     lim_inf = [center[0]-boundary, center[1]-boundary, center[2]-boundary]
     lim_sup = [center[0]+boundary, center[1]+boundary, center[2]+boundary]
-    
+
+    print("\nCreating images:")
+    pbar = tqdm(total = (len(evolution)-img_step)/img_step) #Bar changing
     #Write the image files
     for i in range(img_step,len(evolution),img_step):       
-        print("Writing image at iteration {0}".format(i))
         plot_bodies(evolution[:i], i//img_step, 2*i*dt, lim_inf, lim_sup, image_folder)
+        pbar.update(1)
+    pbar.close()
 
 def plot_bodies(bodies, i, time, lim_inf, lim_sup, image_folder='images/'):
     '''
@@ -185,42 +183,36 @@ def create_video(image_folder='images/', video_name='my_video.mp4'):
 
 if __name__=="__main__":
     '''
-    Example of 3-Body system: Sun-Jupiter and Body_3
+    Example of 3-Body system: Sun-Jupiter-Earth
     '''
     #Planets information
     Body_1 = Sun # [x, y, z, vx, vy, vz, mass, orbital period]
     name1 = 'Sun'
     Body_2 = Jupiter # [x, y, z, vx, vy, vz, mass, orbital period]
     name2 = 'Jupiter'
-    Body_3 = a_2021PH27 # [x, y, z, vx, vy, vz, mass, orbital period]
-    name3 = 'a_2021PH27'
-    
-    
-    # Creation of the time grid (in years)
-    t = array([0.,max(Body_1[-1],Body_2[-1], Body_3[-1])])
+    Body_3 = Earth_Moon # [x, y, z, vx, vy, vz, mass, orbital period]
+    name3 = 'Earth_Moon'
     
     # Number of steps in the grid
     n = 10000
     
     # Arrays to store time information
-    t1 = linspace(t[0], t[1], n)
-    dt = (t[1]-t[0])/n
-    print(f'dt={dt} and tf={t1[1]}')
-    # Mass
-    m1 = Body_1[6]
-    m2 = Body_2[6]
-    m3 = Body_3[6]
-    mass = array([m1, m2, m3])
+    t = linspace(0., max(Body_1[-1],Body_2[-1], Body_3[-1]), n) 
+    dt = (t[-1]-t[0])/n
+    print(f'dt={dt} and tf={t[-1]}')
+
+    # Masses [m1,m2,m3]
+    mass = array([Body_1[6], Body_2[6], Body_3[6]])
     
     # Initial Conditions
-    q = zeros([n,3,6]) #  Motion information FR
-    q[0, 0] = Body_1[:6] # initial x, y, vx, vy to particle 1
-    q[0, 1] = Body_2[:6] # initial x, y, vx, vy to particle 2
-    q[0, 2] = Body_3[:6] # initial x, y, vx, vy to particle 3
+    q = zeros([n,3,6]) # Motion information 
+    q[0, 0] = Body_1[:6]  # initial x, y, vx, vy to body 1
+    q[0, 1] = Body_2[:6]  # initial x, y, vx, vy to body 2
+    q[0, 2] = Body_3[:6]  # initial x, y, vx, vy to body 3
 
 
-    # Solution to the problem using LeapFrog method
-    q = PEFRL(Acceleration, q[0], mass, n, t)
+    # Solution to the problem using PEFRL method
+    q = PEFRL(Acceleration, q[0], mass, n, dt)
     
     # Frequency at which .PNG images are written.
     img_step = 50
@@ -231,5 +223,5 @@ if __name__=="__main__":
     # Center of the image
     center = array([0., 0., 0.])
 
-    #create_images(q, dt, center, img_step, image_folder, video_name)
-    #create_video(image_folder, video_name)
+    create_images(q, dt, center, img_step, image_folder, video_name)
+    create_video(image_folder, video_name)
