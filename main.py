@@ -44,7 +44,7 @@ ini_pos_3, ini_vel_3 = op_to_coords( G*masses[0], Body_3['Semi-major axis'], Bod
 # Array to store the system's evolution
 Evolution = zeros([n,3,6])
 # initial x, y, z, vx, vy, vz of Body 1
-Evolution[0, 0] = np.array([0., 0., 0., 0., 0., 0.]) # It's in the center and at rest.
+Evolution[0, 0] = array([0., 0., 0., 0., 0., 0.]) # It's in the center and at rest.
 # initial x, y, z, vx, vy, vz of Body 2
 Evolution[0, 1] = ini_pos_2[0], ini_pos_2[1], ini_pos_2[2],\
                   ini_vel_2[0], ini_vel_2[1], ini_vel_2[2]
@@ -58,7 +58,7 @@ if Vid:
     # Frequency at which .PNG images are written.
     img_step = 50
     # Folder to save the images
-    image_folder = 'images/Initial/'
+    image_folder = 'images/'
     # Name of the generated video
     video_name = names[0]+'_'+names[1]+'_'+names[2]+'_Initial.mp4'
     # Center of the image
@@ -120,7 +120,7 @@ FileB2_OP.close()
 # Final Video
 if Vid:
     # Folder to save the images
-    image_folder = 'images/Final/'
+    image_folder = 'images/'
     # Name of the generated video
     video_name = names[0]+'_'+names[1]+'_'+names[2]+'_Final.mp4'
     # Center of the image
