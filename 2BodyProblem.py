@@ -1,6 +1,6 @@
 # Simulation of two bodies interacting gravitationally.
 
-from numpy import pi, loadtxt, float64, zeros, array, sum, cross, str_, linspace
+from numpy import pi, loadtxt, empty, array, sum, cross, linspace
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -15,7 +15,7 @@ G = 4*pi**2
 # [name, a[au], ecc, i[rad], omega[rad], Omega[rad], Epoch[yr], time[yr], mass[M_Sun], period [yr]]
 Data =  loadtxt("Data.asc",
         dtype={'names': ('Name', 'Semi-major axis', 'Eccentricity', 'Inclination', 'Peri', 'Node', 'Epoch', 'Time', 'Mass', 'Period'),
-               'formats': ("|S15", float64, float64, float64, float64, float64, float64, float64, float64, float64)})
+               'formats': ("|S15", float, float, float, float, float, float, float, float, float)})
 
 def Acceleration(q0, mass):
     '''
@@ -38,7 +38,7 @@ def Acceleration(q0, mass):
         a[i] = [ax_i, ay_i, az_i] for i=[0,1]
     ----------------------------------------------------
     '''
-    a = zeros([2, 3])
+    a = empty([2, 3])
     Deltaxyz = q0[0] - q0[1]
     r = LA.norm(Deltaxyz)  # Distance between particles
     a[0, :] = -G * Deltaxyz * mass[1]/r**3  # Acceleration Body_1
@@ -97,7 +97,7 @@ def PEFRL(ODE, q0, mass, n, dt):
     ----------------------------------------------------
     '''
     # Arrays to store the solution
-    q = zeros([n, 2, 6])  
+    q = empty([n, 2, 6])
     q[0] = q0
 
     # Parameters
@@ -125,7 +125,7 @@ def PEFRL(ODE, q0, mass, n, dt):
 
 # Data of bodies
 Body_2 = Data[0] # Body 2
-names = ['Sun', str_(Body_2['Name'])[2:-1]] # Here, we dalete a extra characters
+names = ['Sun', str(Body_2['Name'])[2:-1]] # Here, we dalete a extra characters
                                                # of the 2nd body's name
 
 # Number of time-iterations.
@@ -147,7 +147,7 @@ ini_pos_2, ini_vel_2 = op_to_coords( G*masses[0], Body_2['Semi-major axis'], Bod
                         Body_2['Inclination'], Body_2['Peri'], Body_2['Node'], Body_2['Epoch'], Body_2['Time'])
 
 # Array to store the system's evolution
-Evolution = zeros([n,2,6])
+Evolution = empty([n,2,6])
 # initial x, y, z, vx, vy, vz of Body 1
 Evolution[0, 0] = array([0., 0., 0., 0., 0., 0.]) # It's in the center and at rest
 # initial x, y, z, vx, vy, vz of Body 2
@@ -163,8 +163,8 @@ print('The process has finished.')
 Plot_orbit(Evolution, names)
 
 # Array of Energy and Angular momentum of the system
-Energy = zeros(n) # Energy 
-AngMom = zeros(n) # Angular momentum
+Energy = empty(n) # Energy
+AngMom = empty(n) # Angular momentum
 print('Calculating Energy and Angular Momentum...')
 for i in range(n):
     Energy[i], AngMom[i] = Constants(Evolution[i], masses)
@@ -191,7 +191,7 @@ plt.setp(axs, xlim=[0,t[-1]])
 plt.show()
 
 # Orbital Elements
-Orbital_elements = zeros([n,5]) # Evolution of orbital elements
+Orbital_elements = empty([n,5]) # Evolution of orbital elements
 print('Transforming to orbital elements...')
 for i in range(n):
     Orbital_elements[i]=coords_to_op(G*masses[0],Evolution[i,1,:3]-Evolution[i,0,:3],Evolution[i,1,3:]-Evolution[i,0,3:])
