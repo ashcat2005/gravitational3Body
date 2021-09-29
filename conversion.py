@@ -95,13 +95,12 @@ def coords_to_op(mu, r_xyz, v_xyz):
     # Inclination of the orbit
     i = arccos(h_xyz[2]/h)
     # Line of the Nodes
-    N_xyz = cross(array([0., 0., 1.]), h_xyz)
-    N = norm(N_xyz)
+    N = sqrt(h_xyz[1]**2+h_xyz[0]**2)
     # Longitude of the ascending node
-    if N_xyz[1] >= 0:
-        Omega = arccos(N_xyz[0]/N)
+    if h_xyz[0] >= 0:
+        Omega = arccos(-h_xyz[1]/N)
     else:
-        Omega = 2*pi - arccos(N_xyz[0]/N)
+        Omega = 2*pi - arccos(-h_xyz[1]/N)
     
     # Eccentricity vector
     ecc_xyz = (1/mu)*((v**2 - mu/r)*r_xyz - r*v_r*v_xyz)
@@ -112,7 +111,7 @@ def coords_to_op(mu, r_xyz, v_xyz):
     a = h**2/(mu*(1-ecc**2))
     
     # Argument of the pericenter
-    aux =  dot(N_xyz,ecc_xyz)/(N*ecc)
+    aux =  (-h_xyz[1]*ecc_xyz[0]+h_xyz[0]*ecc_xyz[1])/(N*ecc)
     if abs(aux) >1.:
         omega = 0.
     else:
