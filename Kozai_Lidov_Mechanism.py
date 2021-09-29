@@ -12,7 +12,7 @@ Data =  loadtxt("Data.asc", usecols=(0,1,2,3,4,8),
         dtype={'names': ('Name', 'Semi-major axis', 'Eccentricity', 'Inclination', 'Peri', 'Mass'),
                'formats': ("|S15", float64, float64, float64, float64, float64)})
 
-Body_1 = Data[1] # Inner Body
+Body_1 = Data[2] # Inner Body
 Body_2 = Data[0] # Outer Body
 
 tf = 1e5 # Final time [yr]
