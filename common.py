@@ -1,4 +1,4 @@
-from numpy import pi, array, zeros, sum, cross, amin, amax, linspace
+from numpy import pi, array, empty, sum, cross, amin, amax, linspace
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
@@ -35,7 +35,7 @@ def Acceleration(q0, mass):
         acceleration
         a[i] = [ax_i, ay_i, az_i] for i=0,1,2
     '''
-    a = zeros([3, 3])
+    a = empty([3, 3])
     Deltaxyz = q0[0] - q0[1], q0[0] - q0[2], q0[1] - q0[2]    
     r = LA.norm(Deltaxyz[0]), LA.norm(Deltaxyz[1]), LA.norm(Deltaxyz[2]) # Distance between particles
     a[0,:] = -G * Deltaxyz[0] * mass[1] / r[0]**3 - G * Deltaxyz[1] * mass[2]/r[1]**3
@@ -97,10 +97,10 @@ def PEFRL(ODE, q0, mass, n, dt):
         solution since t0 to tf
     '''
     # Arrays to store the solution
-    q = zeros([n, 3, 6])  
+    q = empty([n, 3, 6])
     q[0] = q0
     
-    #Parameter
+    #Parameters
     xi = 0.1786178958448091E+00
     gamma = -0.2123418310626054E+00
     chi = -0.6626458266981849E-01 
@@ -120,9 +120,8 @@ def PEFRL(ODE, q0, mass, n, dt):
         F = ODE(x_4, mass)
         q[i+1,:,3:] = v_3 + 0.5*(1.-2*gamma)*dt*F
         q[i+1,:,:3] = x_4 + xi*dt*q[i+1,:,3:]
+    return q
 
-    return q     
-            
 def create_images(evolution, dt, center, img_step, image_folder='images/', video_name='my_video.mp4'):
     '''
     This function evolves the system in time using the PEFRL algorithm
@@ -205,7 +204,7 @@ if __name__=="__main__":
     mass = array([Body_1[6], Body_2[6], Body_3[6]])
     
     # Initial Conditions
-    q = zeros([n,3,6]) # Motion information 
+    q = empty([n,3,6]) # Motion information
     q[0, 0] = Body_1[:6]  # initial x, y, vx, vy to body 1
     q[0, 1] = Body_2[:6]  # initial x, y, vx, vy to body 2
     q[0, 2] = Body_3[:6]  # initial x, y, vx, vy to body 3
