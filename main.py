@@ -2,21 +2,21 @@ from common import *
 from conversion import *
 from tqdm import tqdm
 
-from numpy import array, zeros, linspace, savetxt, loadtxt, float64, str_, zeros
+from numpy import array, empty, linspace, savetxt, loadtxt
 
 # Examples of celestial bodies
 # Data has format:
 # [name, a[au], ecc, i[rad], omega[rad], Omega[rad], Epoch[yr], time[yr], mass[Solar masses], period [yr]]
 Data =  loadtxt("Data.asc",
         dtype={'names': ('Name', 'Semi-major axis', 'Eccentricity', 'Inclination', 'Peri', 'Node', 'Epoch', 'Time', 'Mass', 'Period'),
-               'formats': ("|S15", float64, float64, float64, float64, float64, float64, float64, float64, float64)})
+               'formats': ("|S15", float, float, float, float, float, float, float, float, float)})
 
 # Bodies initial data
 Body_2 = Data[0] # Body 2
-Body_3 = Data[1]  # Body 3
-names = ['Sun', str_(Body_2['Name'])[2:-1], str_(Body_3['Name'])[2:-1]] # we delete extra characters due to str format.
+Body_3 = Data[2]  # Body 3
+names = ['Sun', str(Body_2['Name'])[2:-1], str(Body_3['Name'])[2:-1]] # we delete extra characters due to str format.
 
-k = 10000 # Number of outer periods.
+k = 10 # Number of outer periods.
 jump = 100 # Jump size to store data in files
 
 # Time's interval of a outer period [yr]
@@ -42,7 +42,7 @@ ini_pos_3, ini_vel_3 = op_to_coords( G*masses[0], Body_3['Semi-major axis'], Bod
                         Body_3['Inclination'], Body_3['Peri'], Body_3['Node'], Body_3['Epoch'], Body_3['Time'])
 
 # Array to store the system's evolution
-Evolution = zeros([n,3,6])
+Evolution = empty([n,3,6])
 # initial x, y, z, vx, vy, vz of Body 1
 Evolution[0, 0] = array([0., 0., 0., 0., 0., 0.]) # It's in the center and at rest.
 # initial x, y, z, vx, vy, vz of Body 2
@@ -96,17 +96,17 @@ savetxt(FileB2_OP,array([[dt, n, k, jump]]), fmt=fmt)
 
 # Solution to the problem using PEFRL method
 print('\nEvolution:')
-Orbital_elements = zeros([n,2,5])
+Orbital_elements = empty([int(n/jump),2,5])
 Bar = tqdm(total = k) #Bar changing
 for j in range(k):
     savetxt(FileB0_CC, Evolution[::jump,0,:])
     savetxt(FileB1_CC, Evolution[::jump,1,:])
     savetxt(FileB2_CC, Evolution[::jump,2,:])
-    for i in range(n):
-        Orbital_elements[i,0]=coords_to_op(G*masses[0],Evolution[i,1,:3]-Evolution[i,0,:3] , Evolution[i,1,3:]-Evolution[i,0,3:])
-        Orbital_elements[i,1]=coords_to_op(G*masses[0],Evolution[i,2,:3]-Evolution[i,0,:3] , Evolution[i,2,3:]-Evolution[i,0,3:])
-    savetxt(FileB1_OP, Orbital_elements[::jump,0])
-    savetxt(FileB2_OP, Orbital_elements[::jump,1]) 
+    for i in range(0,n,jump):
+        Orbital_elements[int(i/jump),0]=coords_to_op(G*masses[0],Evolution[i,1,:3]-Evolution[i,0,:3] , Evolution[i,1,3:]-Evolution[i,0,3:])
+        Orbital_elements[int(i/jump),1]=coords_to_op(G*masses[0],Evolution[i,2,:3]-Evolution[i,0,:3] , Evolution[i,2,3:]-Evolution[i,0,3:])
+    savetxt(FileB1_OP, Orbital_elements[:,0])
+    savetxt(FileB2_OP, Orbital_elements[:,1])
     Bar.update(1)
     Evolution[0] = Evolution[n-1]
     Evolution = PEFRL(Acceleration, Evolution[0], masses, n, dt)
