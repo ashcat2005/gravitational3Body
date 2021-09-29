@@ -7,7 +7,7 @@ from tqdm import tqdm
 from numpy import loadtxt, linspace, array, zeros
 
 # Body's name
-Names = ['Sun', 'Jupiter','Kozai'] # Remember to update the 3rd body!!!
+Names = ['Sun', 'Jupiter','(1373)Cincinnati'] # Remember to update the 3rd body!!!
 #Body's masses [M_sun]
 Masses = [1., 9.54792e-04, 1.0e-16]
 
@@ -28,10 +28,10 @@ dt, n, k, jump =  loadtxt(path_OP_B1, max_rows=1, unpack=True,
 # Array to store time information
 it = int(n/ jump)
 t = linspace(0, dt*n*k, k*it)
-
+skip_rows = 3
 # Plots of orbital elements.
-Plot_OrbElem(t, loadtxt(path_OP_B1, skiprows=3), Names[1])
-Plot_OrbElem(t, loadtxt(path_OP_B2, skiprows=3), Names[2])
+Plot_OrbElem(t, loadtxt(path_OP_B1, skiprows=skip_rows), Names[1])
+Plot_OrbElem(t, loadtxt(path_OP_B2, skiprows=skip_rows), Names[2])
 
 # Energy and Angular momentum of the system
 
@@ -55,9 +55,9 @@ AngMom = zeros(it) # Angular momentum
 print('Calculating Energy and Angular Momentum...')
 Bar = tqdm(total = k) #Bar changing
 for i  in range(k):
-    Evolution_B0 = loadtxt(path_CC_B0, skiprows= 3+i*it, max_rows=it)
-    Evolution_B1 = loadtxt(path_CC_B1, skiprows= 3+i*it, max_rows=it)
-    Evolution_B2 = loadtxt(path_CC_B2, skiprows= 3+i*it, max_rows=it)
+    Evolution_B0 = loadtxt(path_CC_B0, skiprows=skip_rows+i*it, max_rows=it)
+    Evolution_B1 = loadtxt(path_CC_B1, skiprows=skip_rows+i*it, max_rows=it)
+    Evolution_B2 = loadtxt(path_CC_B2, skiprows=skip_rows+i*it, max_rows=it)
     for j in range(it):
         Energy[j], AngMom[j] = Constants(array([Evolution_B0[j],Evolution_B1[j], Evolution_B2[j]]), Masses)
     axs[0].plot(t[i*it:(i+1)*it],Energy, color='cyan')
