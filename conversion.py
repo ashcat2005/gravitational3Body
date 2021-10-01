@@ -2,7 +2,8 @@
 # and cartesian velocities.
 
 from numpy.linalg import norm
-from numpy import sin, cos, arcsin, arccos, pi, sqrt, array, dot, cross
+from numpy import array, dot, cross
+from math import sin, cos, acos, pi, sqrt
 from scipy.optimize import newton
 
 def op_to_coords(mu, a, ecc, i, omega, Omega, t_0, t):
@@ -93,14 +94,14 @@ def coords_to_op(mu, r_xyz, v_xyz):
     # Norm of the angular momentum
     h = norm(h_xyz)
     # Inclination of the orbit
-    i = arccos(h_xyz[2]/h)
+    i = acos(h_xyz[2]/h)
     # Line of the Nodes
     N = sqrt(h_xyz[1]**2+h_xyz[0]**2)
     # Longitude of the ascending node
     if h_xyz[0] >= 0:
-        Omega = arccos(-h_xyz[1]/N)
+        Omega = acos(-h_xyz[1]/N)
     else:
-        Omega = 2*pi - arccos(-h_xyz[1]/N)
+        Omega = 2*pi - acos(-h_xyz[1]/N)
     
     # Eccentricity vector
     ecc_xyz = (1/mu)*((v**2 - mu/r)*r_xyz - r*v_r*v_xyz)
@@ -116,9 +117,9 @@ def coords_to_op(mu, r_xyz, v_xyz):
         omega = 0.
     else:
         if ecc_xyz[2] >=0.:
-            omega = arccos(aux)
+            omega = acos(aux)
         else:
-            omega = 2*pi - arccos(aux)
+            omega = 2*pi - acos(aux)
     
     return a, ecc, i, omega, Omega
 
@@ -139,7 +140,7 @@ if __name__ == "__main__":
     omega = 111.33*pi/180   # Argument of the pericenter [rad]
     t_0 = 0.    # Epoch [yr]
     t =0.       # Time to calculate the position and velocity [yr]
-    
+
     r_xyz, v_xyz = op_to_coords(mu, a, ecc, i, omega, Omega, t_0, t)
 
     print(f'\nr = {r_xyz}')
